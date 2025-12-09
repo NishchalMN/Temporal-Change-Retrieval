@@ -1,122 +1,96 @@
-"""
-Data loader for combining multiple change detection datasets.
-"""
-
-import os
-from torch.utils.data import Dataset, ConcatDataset
+import json
+from pathlib import Path
 from PIL import Image
+from torch.utils.data import Dataset
 from torchvision import transforms
 
-class ChangeDetectionDataset(Dataset):
-    """Change detection dataset loader"""
 
-    def __init__(self, root_dir, split='train', transform=None, dataset_name='LEVIR-CD'):
-        self.root_dir = root_dir
+class MultiTemporalDataset(Dataset):
+
+    def __init__(self, split='train', datasets=['levir-mci', 's2looking'], data_root='./data/raw'):
         self.split = split
-        self.dataset_name = dataset_name
-        self.transform = transform or self._default_transform()
+        self.data_root = Path(data_root)
 
-        # Paths
-        self.img_a_dir = os.path.join(root_dir, split, 'A')
-        self.img_b_dir = os.path.join(root_dir, split, 'B')
-        self.label_dir = os.path.join(root_dir, split, 'label')
-
-        # Get image names
-        self.image_names = sorted([
-            f for f in os.listdir(self.img_a_dir)
-            if f.endswith(('.png', '.jpg', '.jpeg'))
-        ])
-
-        print(f"Loaded {dataset_name} {split}: {len(self.image_names)} pairs")
-
-    def _default_transform(self):
-        return transforms.Compose([
-            transforms.Resize((256, 256)),
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            )
+            transforms.Normalize(mean=[0.48145466, 0.4578275, 0.40821073],
+                                std=[0.26862954, 0.26130258, 0.27577711])
         ])
+
+        self.samples = []
+
+        for dataset_name in datasets:
+            if dataset_name in ['levir-cc', 'levir-mci']:
+                self._load_levir_cc()
+            elif dataset_name == 's2looking':
+                self._load_s2looking()
+
+    def _load_levir_cc(self):
+        dataset_root = self.data_root / 'Levir-MCI-dataset'
+        captions_file = dataset_root / 'LevirCCcaptions.json'
+
+        with open(captions_file, 'r') as f:
+            data = json.load(f)
+
+        if isinstance(data, dict) and 'images' in data:
+            images_list = data['images']
+        else:
+            return
+
+        for img_data in images_list:
+            if img_data['split'] != self.split:
+                continue
+
+            filename = img_data['filename']
+            img_id = filename.replace('.png', '')
+
+            for sent_obj in img_data['sentences']:
+                caption = sent_obj['raw'].strip()
+
+                self.samples.append({
+                    'dataset': 'levir-mci',
+                    'img_id': img_id,
+                    'image_a': dataset_root / 'images' / self.split / 'A' / filename,
+                    'image_b': dataset_root / 'images' / self.split / 'B' / filename,
+                    'caption': caption
+                })
+
+    def _load_s2looking(self):
+        dataset_root = self.data_root / 'S2Looking-dataset'
+        captions_file = dataset_root / 'S2LookingCaptions.json'
+
+        with open(captions_file, 'r') as f:
+            captions = json.load(f)
+
+        for img_id, data in captions.items():
+            if data['split'] != self.split:
+                continue
+
+            for caption in data['sentences']:
+                self.samples.append({
+                    'dataset': 's2looking',
+                    'img_id': img_id,
+                    'image_a': dataset_root / 'images' / self.split / 'A' / data['filename_a'],
+                    'image_b': dataset_root / 'images' / self.split / 'B' / data['filename_b'],
+                    'caption': caption
+                })
 
     def __len__(self):
-        return len(self.image_names)
+        return len(self.samples)
 
     def __getitem__(self, idx):
-        name = self.image_names[idx]
+        sample = self.samples[idx]
 
-        # Load images
-        img_a = Image.open(os.path.join(self.img_a_dir, name)).convert('RGB')
-        img_b = Image.open(os.path.join(self.img_b_dir, name)).convert('RGB')
+        img_a = Image.open(sample['image_a']).convert('RGB')
+        img_b = Image.open(sample['image_b']).convert('RGB')
 
-        # Transform
-        img_a_t = self.transform(img_a)
-        img_b_t = self.transform(img_b)
+        img_a = self.transform(img_a)
+        img_b = self.transform(img_b)
 
         return {
-            'image_a': img_a_t,
-            'image_b': img_b_t,
-            'image_id': f"{self.dataset_name}_{name}",
-            'dataset': self.dataset_name
+            'image_a': img_a,
+            'image_b': img_b,
+            'caption': sample['caption'],
+            'dataset': sample['dataset']
         }
-
-
-def create_multi_dataset(datasets_to_use=['LEVIR-CD'], split='train', transform=None):
-    """
-    Combined dataset from multiple sources.
-
-    Args:
-        datasets_to_use: List of dataset names
-        split: 'train', 'val', or 'test'
-        transform: data transformations
-
-    Returns:
-        Combined dataset
-    """
-    dataset_paths = {
-        'LEVIR-CD': 'data/raw/LEVIR-CD',
-        'S2Looking': 'data/raw/S2Looking'
-    }
-
-    individual_datasets = []
-
-    for dataset_name in datasets_to_use:
-        dataset_path = dataset_paths.get(dataset_name)
-
-        if dataset_path and os.path.exists(dataset_path):
-            ds = ChangeDetectionDataset(
-                dataset_path,
-                split=split,
-                transform=transform,
-                dataset_name=dataset_name
-            )
-            individual_datasets.append(ds)
-        else:
-            print(f"{dataset_name} not found at {dataset_path}, skipping")
-
-    if len(individual_datasets) == 0:
-        raise ValueError("No datasets found!")
-
-    if len(individual_datasets) == 1:
-        return individual_datasets[0]
-
-    # Combine datasets
-    combined = ConcatDataset(individual_datasets)
-    print(f"\nCombined dataset: {len(combined)} total pairs")
-
-    return combined
-
-
-if __name__ == '__main__':
-    
-    dataset = create_multi_dataset(
-        datasets_to_use=['LEVIR-CD', 'S2Looking'],
-        split='train'
-    )
-    print(f"Dataset size: {len(dataset)}")
-
-    # Test loading
-    sample = dataset[0]
-    print(f"\nSample keys: {sample.keys()}")
-    print(f"Image A shape: {sample['image_a'].shape}")
-    print(f"Dataset source: {sample['dataset']}")
