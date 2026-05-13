@@ -1,10 +1,30 @@
 # Temporal Change Retrieval with Natural Language Queries
 
-A deep learning system for retrieving temporal changes in satellite imagery using natural language descriptions. Built with CLIP encoders and contrastive learning.
+A deep learning system for retrieving temporal changes in satellite imagery using natural language descriptions. Built with RemoteCLIP encoders and contrastive learning.
 
 ## Problem Statement
 
 Available change detection methods output binary masks or heatmaps, making it difficult to search for specific types of changes. This project enables semantic retrieval, given a text query like "new buildings constructed" or "deforestation in forested areas", the system retrieves matching temporal changes from a database of bi-temporal image pairs.
+
+
+## Example Results
+
+The model retrieves temporal satellite image pairs that match natural language change queries.
+
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Query:</strong> new building constructed
+      <br><br>
+      <img src="docs/results/query-new-building-constructed.png" alt="Retrieval results for the query: new building constructed">
+    </td>
+    <td width="50%">
+      <strong>Query:</strong> show me places where roads have changed
+      <br><br>
+      <img src="docs/results/query-roads-have-changed.png" alt="Retrieval results for the query: show me places where roads have changed">
+    </td>
+  </tr>
+</table>
 
 ## Approach
 
@@ -132,3 +152,12 @@ Performance on multi-dataset evaluation (15K samples):
 - Concat strategy achieves best performance with freeze-early-layers
 - RemoteCLIP improves results by ~5-7% over standard CLIP
 - FST performs well on structural changes (buildings, infrastructure)
+
+See [Example Results](#example-results) for qualitative retrieval examples.
+
+
+## Publication and Usage Notice
+
+This work is in preparation for academic publication. The code, documentation, figures, and results in this repository are shared for academic review and reference only. All rights are reserved; no permission is granted to copy, modify, distribute, publish, or use this work without prior written permission.
+
+If you reference this project or build on the ideas in it, please contact the author and cite the associated paper once available.
