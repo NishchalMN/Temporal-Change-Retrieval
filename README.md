@@ -11,20 +11,13 @@ Available change detection methods output binary masks or heatmaps, making it di
 
 The model retrieves temporal satellite image pairs that match natural language change queries.
 
-<table>
-  <tr>
-    <td width="50%">
-      <strong>Query:</strong> new building constructed
-      <br><br>
-      <img src="docs/results/query-new-building-constructed.png" alt="Retrieval results for the query: new building constructed">
-    </td>
-    <td width="50%">
-      <strong>Query:</strong> show me places where roads have changed
-      <br><br>
-      <img src="docs/results/query-roads-have-changed.png" alt="Retrieval results for the query: show me places where roads have changed">
-    </td>
-  </tr>
-</table>
+**Query:** new building constructed
+
+<img src="docs/results/query-new-building-constructed.png" alt="Retrieval results for the query: new building constructed" width="100%">
+
+**Query:** show me places where roads have changed
+
+<img src="docs/results/query-roads-have-changed.png" alt="Retrieval results for the query: show me places where roads have changed" width="100%">
 
 ## Approach
 
