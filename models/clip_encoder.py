@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import open_clip
 from pathlib import Path
 import numpy as np
-from models.fst_module import FrequencySpatialTemporalModule
+from models.fst_module import ExperimentalTemporalFusionModule
 
 def load_remoteclip(model_name, device):
     # Load RemoteCLIP weights from local checkpoint.
@@ -24,7 +24,7 @@ class BitemporalCLIPEncoder(nn.Module):
         - concat: Concatenation of before, after, and difference
         - learned: MLP-based change encoder
         - cross_attn: Cross-attention between before and after 
-        - fst: Frequency-Spatial-Temporal fusion
+        - fst: Experimental temporal fusion, details omitted pending publication
     """
 
     def __init__(
@@ -91,9 +91,9 @@ class BitemporalCLIPEncoder(nn.Module):
             ).to(device)
 
         elif strategy == 'fst':
-            # Frequency-Spatial-Temporal fusion
+            # Experimental temporal fusion module; details omitted pending publication.
             transformer_width = self.clip_model.visual.conv1.out_channels
-            self.fst_module = FrequencySpatialTemporalModule(
+            self.fst_module = ExperimentalTemporalFusionModule(
                 channels=transformer_width,
                 output_dim=transformer_width
             ).to(device)
@@ -176,7 +176,7 @@ class BitemporalCLIPEncoder(nn.Module):
             change = F.normalize(change, dim=-1)
 
         elif self.strategy == 'fst':
-            # Frequency-Spatial-Temporal fusion
+            # Experimental temporal fusion module; details omitted pending publication.
             patches_2d_before = self.extract_patch_features(img_before)
             patches_2d_after = self.extract_patch_features(img_after)
 

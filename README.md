@@ -2,6 +2,10 @@
 
 A deep learning system for retrieving temporal changes in satellite imagery using natural language descriptions. Built with RemoteCLIP encoders and contrastive learning.
 
+## Publication Note
+
+This repository is shared as a project preview while the associated paper is in preparation. The public code includes the retrieval pipeline, training setup, evaluation code, and baseline change encoders. One experimental temporal fusion module is kept as an interface only until publication. See [LICENSE](LICENSE) for usage terms.
+
 ## Problem Statement
 
 Available change detection methods output binary masks or heatmaps, making it difficult to search for specific types of changes. This project enables semantic retrieval, given a text query like "new buildings constructed" or "deforestation in forested areas", the system retrieves matching temporal changes from a database of bi-temporal image pairs.
@@ -47,11 +51,9 @@ We implement and compare 5 different strategies for encoding temporal changes:
    - Attends to relevant regions across time
    - Captures spatial correspondences
 
-5. **FST**: Frequency-Spatial-Temporal fusion
-   - Uses FFT to separate structural changes from noise
-   - High-frequency components like buildings/roads
-   - Low-frequency components like lighting/shadows
-   - Spatial attention focuses on change-rich regions
+5. **FST**: Experimental temporal fusion
+   - Publication-pending strategy for temporal change representation
+   - Public repository keeps the integration point, with implementation details omitted until paper release
 
 ### Training
 
@@ -110,7 +112,7 @@ python train.py \
 - `--strategy concat` - Best performance
 - `--strategy learned` - Learnable change encoder
 - `--strategy cross_attn` - Cross-attention
-- `--strategy fst` - Frequency-spatial-temporal fusion
+- `--strategy fst` - Experimental temporal fusion; implementation details omitted pending publication
 
 **Model Options:**
 - `--use-remote-clip` - Use RemoteCLIP (satellite-specific weights)
@@ -144,13 +146,6 @@ Performance on multi-dataset evaluation (15K samples):
 **Key Findings:**
 - Concat strategy achieves best performance with freeze-early-layers
 - RemoteCLIP improves results by ~5-7% over standard CLIP
-- FST performs well on structural changes (buildings, infrastructure)
+- FST is included as a publication-pending strategy; implementation details are omitted until paper release
 
 See [Example Results](#example-results) for qualitative retrieval examples.
-
-
-## Publication and Usage Notice
-
-This work is in preparation for academic publication. The code, documentation, figures, and results in this repository are shared for academic review and reference only. All rights are reserved; no permission is granted to copy, modify, distribute, publish, or use this work without prior written permission.
-
-If you reference this project or build on the ideas in it, please contact the author and cite the associated paper once available.
