@@ -140,7 +140,7 @@ Performance on multi-dataset evaluation (15K samples):
 
 | Strategy | R@1 | R@5 | R@10 |
 |----------|-----|-----|------|
-| **Concat** | **12%** | **35%** | **48%** |
+| **Concat** | **18%** | **42%** | **64%** |
 
 
 **Key Findings:**
